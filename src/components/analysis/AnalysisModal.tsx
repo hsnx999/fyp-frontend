@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
-import { X, UserPlus, Users } from 'lucide-react';
+import { X, UserPlus, Users, ArrowLeft } from 'lucide-react';
 
 interface AnalysisModalProps {
   isOpen: boolean;
@@ -40,22 +40,32 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
   if (showRegistrationForm) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md relative">
+      <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+          
           <button
             onClick={() => {
               setShowRegistrationForm(false);
               onClose();
             }}
-            className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+            className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={20} />
           </button>
 
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Register New Patient</h2>
+          <div className="p-8">
+            <div className="flex items-center gap-2 mb-6">
+              <button
+                onClick={() => setShowRegistrationForm(false)}
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-gray-900">Register New Patient</h2>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
@@ -146,7 +156,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 </Select>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end gap-3 pt-4">
                 <Button 
                   type="button" 
                   variant="outline" 
@@ -169,16 +179,18 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+        
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X size={20} />
         </button>
 
-        <div className="p-6">
+        <div className="p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Start Analysis</h2>
           <p className="text-gray-600 mb-8">
             Choose how you would like to proceed with the analysis:
@@ -187,7 +199,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
           <div className="space-y-4">
             <Button
               onClick={() => setShowRegistrationForm(true)}
-              className="w-full flex items-center justify-center gap-3 py-6"
+              className="w-full flex items-center justify-center gap-3 py-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-[1.02]"
             >
               <UserPlus size={24} />
               <div className="text-left">
@@ -199,7 +211,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
             <Button
               onClick={onSelectExisting}
               variant="outline"
-              className="w-full flex items-center justify-center gap-3 py-6"
+              className="w-full flex items-center justify-center gap-3 py-6 hover:bg-gray-50 transition-all duration-300"
             >
               <Users size={24} />
               <div className="text-left">

@@ -60,19 +60,21 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+        
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X size={20} />
         </button>
 
-        <div className="p-6">
+        <div className="p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Patient</h2>
 
-          <div className="flex gap-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
@@ -120,7 +122,7 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
             </div>
           </div>
 
-          <div className="overflow-y-auto max-h-96">
+          <div className="overflow-y-auto max-h-[calc(100vh-300px)] rounded-lg border border-gray-200">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -149,9 +151,9 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredPatients.map((patient) => (
-                  <tr key={patient.id} className="hover:bg-gray-50">
+                  <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {patient.id}
+                      {patient.id.slice(0, 8)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {patient.name}
@@ -174,13 +176,14 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {patient.lastVisit}
+                      {new Date(patient.lastVisit).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Button
                         onClick={() => onSelect(patient)}
                         variant="outline"
                         size="sm"
+                        className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors"
                       >
                         Select
                       </Button>
