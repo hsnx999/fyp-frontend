@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart3, Users, FileText, Brain, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { BarChart3, Users, FileText, Brain, TrendingUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const Dashboard = () => {
@@ -7,9 +7,6 @@ const Dashboard = () => {
   const [notesToReview, setNotesToReview] = useState(0);
   const [monthlyReports, setMonthlyReports] = useState(0);
   const [averageConfidence, setAverageConfidence] = useState(0);
-  const [nerCoverage, setNerCoverage] = useState(0);
-  const [avgRiskFactors, setAvgRiskFactors] = useState(0);
-  const [cancerDistribution, setCancerDistribution] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,18 +17,12 @@ const Dashboard = () => {
           patientResult,
           notesResult,
           reportsResult,
-          confidenceResult,
-          metricsResult,
-          riskData,
-          distributionResult
+          confidenceResult
         ] = await Promise.all([
           supabase.from('patients').select('*', { count: 'exact', head: true }),
           supabase.from('notes').select('*', { count: 'exact' }).eq('status', 'pending'),
           supabase.from('reports').select('*', { count: 'exact' }).gte('created_at', new Date(new Date().setDate(1)).toISOString()),
-          supabase.from('reports').select('confidence'),
-          supabase.from('model_metrics').select('ner_coverage').order('last_updated', { ascending: false }).limit(1),
-          supabase.rpc('get_avg_risk_factors'),
-          supabase.from('reports').select('predicted_type')
+          supabase.from('reports').select('confidence')
         ]);
 
         setPatientCount(patientResult.count || 0);
@@ -41,20 +32,6 @@ const Dashboard = () => {
         if (confidenceResult.data?.length) {
           const avg = confidenceResult.data.reduce((sum, r) => sum + r.confidence, 0) / confidenceResult.data.length;
           setAverageConfidence(Math.round(avg * 100));
-        }
-
-        if (metricsResult.data?.length) {
-          setNerCoverage(Math.round(metricsResult.data[0].ner_coverage * 100));
-        }
-
-        setAvgRiskFactors(riskData.data || 0);
-
-        if (distributionResult.data) {
-          const distMap = {};
-          distributionResult.data.forEach(({ predicted_type }) => {
-            distMap[predicted_type] = (distMap[predicted_type] || 0) + 1;
-          });
-          setCancerDistribution(distMap);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -118,53 +95,6 @@ const Dashboard = () => {
           trendUp={averageConfidence > 85}
         />
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <MetricCircle 
-          title="AI Model Performance" 
-          value={averageConfidence} 
-          color="purple"
-          icon={<Brain className="h-5 w-5" />}
-        />
-        <MetricCircle 
-          title="NER Coverage" 
-          value={nerCoverage} 
-          color="blue"
-          icon={<CheckCircle className="h-5 w-5" />}
-        />
-        <MetricCircle 
-          title="Risk Factors" 
-          value={avgRiskFactors} 
-          suffix="avg" 
-          color="yellow"
-          icon={<AlertTriangle className="h-5 w-5" />}
-        />
-      </div>
-
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Cancer Type Distribution</h3>
-          <div className="h-80 flex items-end justify-around px-4">
-            {Object.entries(cancerDistribution).map(([type, count], idx) => {
-              const total = Object.values(cancerDistribution).reduce((a: any, b) => a + b, 0);
-              const percent = (count as number / total) * 100;
-              return (
-                <div key={idx} className="flex flex-col items-center w-1/5">
-                  <div 
-                    className="w-full rounded-t-lg transition-all duration-300 hover:opacity-90"
-                    style={{ 
-                      height: `${percent}%`,
-                      backgroundColor: `hsl(${idx * 50}, 70%, 60%)`,
-                    }}
-                  ></div>
-                  <p className="mt-2 text-sm font-medium text-gray-700">{type}</p>
-                  <p className="text-xs text-gray-500">{percent.toFixed(1)}%</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
@@ -206,70 +136,5 @@ const DashboardCard = ({
     </div>
   </div>
 );
-
-const MetricCircle = ({ 
-  title, 
-  value, 
-  suffix = '%', 
-  color,
-  icon
-}: { 
-  title: string;
-  value: number;
-  suffix?: string;
-  color: string;
-  icon: React.ReactNode;
-}) => {
-  const radius = 40;
-  const circumference = radius * 2 * Math.PI;
-  const progress = value / 100;
-  const strokeDashoffset = circumference * (1 - progress);
-
-  const colorClasses = {
-    purple: 'text-purple-500',
-    blue: 'text-blue-500',
-    yellow: 'text-yellow-500'
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-md p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <span className={colorClasses[color]}>{icon}</span>
-        <h3 className="text-lg font-medium text-gray-700">{title}</h3>
-      </div>
-      
-      <div className="flex items-center justify-center">
-        <div className="relative w-32 h-32">
-          <svg className="transform -rotate-90 w-32 h-32">
-            <circle
-              cx="64"
-              cy="64"
-              r={radius}
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="transparent"
-              className="text-gray-200"
-            />
-            <circle
-              cx="64"
-              cy="64"
-              r={radius}
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="transparent"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              className={`text-${color}-500 transition-all duration-1000 ease-out`}
-            />
-          </svg>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-            <div className="text-2xl font-bold text-gray-900">{value}</div>
-            <div className="text-sm text-gray-500">{suffix}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default Dashboard;
