@@ -7,8 +7,11 @@ import { Button } from './ui/Button';
 
 interface DashboardData {
   patientCount: number;
+  patientGrowth: number;
   notesToReview: number;
+  urgentReviews: number;
   monthlyReports: number;
+  reportGrowth: number;
   averageConfidence: number;
   recentActivity: Activity[];
   patientTrends: TrendData[];
@@ -19,6 +22,7 @@ interface Activity {
   type: string;
   description: string;
   timestamp: string;
+  patient_name?: string;
 }
 
 interface TrendData {
@@ -31,8 +35,11 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardData>({
     patientCount: 0,
+    patientGrowth: 0,
     notesToReview: 0,
+    urgentReviews: 0,
     monthlyReports: 0,
+    reportGrowth: 0,
     averageConfidence: 0,
     recentActivity: [],
     patientTrends: []
@@ -43,32 +50,105 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch all data in parallel for better performance
-        const [
-          patientResult,
-          notesResult,
-          reportsResult,
-          confidenceResult,
-          activityResult
-        ] = await Promise.all([
-          supabase.from('patients').select('*', { count: 'exact', head: true }),
-          supabase.from('notes').select('*', { count: 'exact' }).eq('status', 'pending'),
-          supabase.from('reports').select('*', { count: 'exact' }).gte('created_at', new Date(new Date().setDate(1)).toISOString()),
-          supabase.from('reports').select('confidence'),
-          supabase.from('patients').select('created_at').order('created_at', { ascending: false }).limit(30)
-        ]);
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-        // Generate trend data
-        const trendData = generateTrendData(activityResult.data || []);
+        // Fetch current month's patient count
+        const { count: currentPatients } = await supabase
+          .from('patients')
+          .select('*', { count: 'exact', head: true });
+
+        // Fetch last month's patient count
+        const { count: lastMonthPatients } = await supabase
+          .from('patients')
+          .select('*', { count: 'exact', head: true })
+          .lte('created_at', lastDayOfLastMonth.toISOString())
+          .gte('created_at', firstDayOfLastMonth.toISOString());
+
+        // Calculate patient growth
+        const patientGrowth = lastMonthPatients 
+          ? ((currentPatients - lastMonthPatients) / lastMonthPatients) * 100 
+          : 0;
+
+        // Fetch notes requiring review
+        const { count: pendingNotes } = await supabase
+          .from('notes')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending');
+
+        // Fetch urgent notes count
+        const { count: urgentNotes } = await supabase
+          .from('notes')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending')
+          .eq('priority', 'high');
+
+        // Fetch current month's reports
+        const { count: currentReports } = await supabase
+          .from('reports')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', firstDayOfMonth.toISOString());
+
+        // Fetch last month's reports
+        const { count: lastMonthReports } = await supabase
+          .from('reports')
+          .select('*', { count: 'exact', head: true })
+          .lte('created_at', lastDayOfLastMonth.toISOString())
+          .gte('created_at', firstDayOfLastMonth.toISOString());
+
+        // Calculate report growth
+        const reportGrowth = lastMonthReports 
+          ? ((currentReports - lastMonthReports) / lastMonthReports) * 100 
+          : 0;
+
+        // Fetch average confidence
+        const { data: confidenceData } = await supabase
+          .from('reports')
+          .select('confidence')
+          .gte('created_at', firstDayOfMonth.toISOString());
+
+        const averageConfidence = confidenceData?.length
+          ? Math.round(
+              confidenceData.reduce((sum, report) => sum + report.confidence, 0) / 
+              confidenceData.length * 100
+            )
+          : 0;
+
+        // Fetch recent activity
+        const { data: recentActivityData } = await supabase
+          .from('patients')
+          .select(`
+            id,
+            name,
+            created_at,
+            notes (id, status, created_at),
+            reports (id, created_at)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        const recentActivity = recentActivityData?.map(patient => ({
+          id: patient.id,
+          type: 'patient',
+          description: `New patient: ${patient.name}`,
+          timestamp: new Date(patient.created_at).toLocaleString(),
+          patient_name: patient.name
+        })) || [];
+
+        // Fetch trend data based on timeRange
+        const trendData = await fetchTrendData(timeRange);
 
         setData({
-          patientCount: patientResult.count || 0,
-          notesToReview: notesResult.count || 0,
-          monthlyReports: reportsResult.count || 0,
-          averageConfidence: confidenceResult.data?.length 
-            ? Math.round(confidenceResult.data.reduce((sum, r) => sum + r.confidence, 0) / confidenceResult.data.length * 100)
-            : 0,
-          recentActivity: generateRecentActivity(),
+          patientCount: currentPatients || 0,
+          patientGrowth,
+          notesToReview: pendingNotes || 0,
+          urgentReviews: urgentNotes || 0,
+          monthlyReports: currentReports || 0,
+          reportGrowth,
+          averageConfidence,
+          recentActivity,
           patientTrends: trendData
         });
       } catch (error) {
@@ -83,7 +163,21 @@ const Dashboard = () => {
     // Set up real-time subscription
     const subscription = supabase
       .channel('dashboard_changes')
-      .on('postgres_changes', { event: '*', schema: 'public' }, fetchDashboardData)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'patients'
+      }, fetchDashboardData)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'notes'
+      }, fetchDashboardData)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'reports'
+      }, fetchDashboardData)
       .subscribe();
 
     return () => {
@@ -91,45 +185,36 @@ const Dashboard = () => {
     };
   }, [timeRange]);
 
-  const generateTrendData = (patientData: any[]): TrendData[] => {
-    const today = new Date();
-    const data: TrendData[] = [];
-    
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      
-      data.push({
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        patients: Math.floor(Math.random() * 10) + 1,
-        reports: Math.floor(Math.random() * 15) + 1
-      });
-    }
-    
-    return data;
-  };
+  const fetchTrendData = async (range: string): Promise<TrendData[]> => {
+    const now = new Date();
+    let startDate: Date;
+    let interval: string;
 
-  const generateRecentActivity = (): Activity[] => {
-    return [
-      {
-        id: '1',
-        type: 'patient',
-        description: 'New patient registration',
-        timestamp: '2 hours ago'
-      },
-      {
-        id: '2',
-        type: 'report',
-        description: 'CT scan analysis completed',
-        timestamp: '4 hours ago'
-      },
-      {
-        id: '3',
-        type: 'note',
-        description: 'Clinical notes updated',
-        timestamp: '5 hours ago'
-      }
-    ];
+    switch (range) {
+      case 'daily':
+        startDate = new Date(now.setDate(now.getDate() - 7));
+        interval = 'day';
+        break;
+      case 'weekly':
+        startDate = new Date(now.setDate(now.getDate() - 28));
+        interval = 'week';
+        break;
+      case 'monthly':
+        startDate = new Date(now.setMonth(now.getMonth() - 6));
+        interval = 'month';
+        break;
+      default:
+        startDate = new Date(now.setDate(now.getDate() - 7));
+        interval = 'day';
+    }
+
+    const { data: trendData } = await supabase
+      .rpc('get_trend_data', {
+        start_date: startDate.toISOString(),
+        trend_interval: interval
+      });
+
+    return trendData || [];
   };
 
   if (loading) {
@@ -169,30 +254,30 @@ const Dashboard = () => {
           title="Total Patients" 
           icon={<Users className="h-6 w-6 text-blue-500" />} 
           value={data.patientCount}
-          trend="+12% from last month"
-          trendUp={true}
+          trend={`${data.patientGrowth >= 0 ? '+' : ''}${data.patientGrowth.toFixed(1)}% from last month`}
+          trendUp={data.patientGrowth > 0}
         />
         <DashboardCard 
           title="Notes to Review" 
           icon={<FileText className="h-6 w-6 text-yellow-500" />} 
           value={data.notesToReview}
-          trend="5 urgent reviews"
+          trend={`${data.urgentReviews} urgent reviews`}
           trendUp={false}
-          urgent={data.notesToReview > 10}
+          urgent={data.urgentReviews > 0}
         />
         <DashboardCard 
           title="Reports Generated" 
           icon={<BarChart3 className="h-6 w-6 text-green-500" />} 
           value={data.monthlyReports}
-          trend="On track with target"
-          trendUp={true}
+          trend={`${data.reportGrowth >= 0 ? '+' : ''}${data.reportGrowth.toFixed(1)}% from last month`}
+          trendUp={data.reportGrowth > 0}
         />
         <DashboardCard 
           title="Model Confidence" 
           icon={<Brain className="h-6 w-6 text-purple-500" />} 
           value={`${data.averageConfidence}%`}
-          trend="Above threshold"
-          trendUp={data.averageConfidence > 85}
+          trend={data.averageConfidence >= 85 ? 'Above threshold' : 'Below threshold'}
+          trendUp={data.averageConfidence >= 85}
         />
       </div>
 
