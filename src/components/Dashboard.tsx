@@ -9,7 +9,6 @@ interface DashboardData {
   patientCount: number;
   patientGrowth: number;
   notesToReview: number;
-  urgentReviews: number;
   monthlyReports: number;
   reportGrowth: number;
   averageConfidence: number;
@@ -37,7 +36,6 @@ const Dashboard = () => {
     patientCount: 0,
     patientGrowth: 0,
     notesToReview: 0,
-    urgentReviews: 0,
     monthlyReports: 0,
     reportGrowth: 0,
     averageConfidence: 0,
@@ -77,13 +75,6 @@ const Dashboard = () => {
           .from('notes')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending');
-
-        // Fetch urgent notes count
-        const { count: urgentNotes } = await supabase
-          .from('notes')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending')
-          .eq('priority', 'high');
 
         // Fetch current month's reports
         const { count: currentReports } = await supabase
@@ -144,7 +135,6 @@ const Dashboard = () => {
           patientCount: currentPatients || 0,
           patientGrowth,
           notesToReview: pendingNotes || 0,
-          urgentReviews: urgentNotes || 0,
           monthlyReports: currentReports || 0,
           reportGrowth,
           averageConfidence,
@@ -261,9 +251,8 @@ const Dashboard = () => {
           title="Notes to Review" 
           icon={<FileText className="h-6 w-6 text-yellow-500" />} 
           value={data.notesToReview}
-          trend={`${data.urgentReviews} urgent reviews`}
+          trend={`Pending review`}
           trendUp={false}
-          urgent={data.urgentReviews > 0}
         />
         <DashboardCard 
           title="Reports Generated" 
@@ -358,19 +347,15 @@ const DashboardCard = ({
   icon, 
   value, 
   trend, 
-  trendUp, 
-  urgent 
+  trendUp
 }: { 
   title: string;
   icon: React.ReactNode;
   value: number | string;
   trend: string;
   trendUp: boolean;
-  urgent?: boolean;
 }) => (
-  <div className={`bg-white rounded-xl shadow-md transition-all duration-300 hover:shadow-lg ${
-    urgent ? 'border-l-4 border-yellow-500' : ''
-  }`}>
+  <div className="bg-white rounded-xl shadow-md transition-all duration-300 hover:shadow-lg">
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-medium text-gray-700">{title}</h3>
