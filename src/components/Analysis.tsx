@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Patient, ExtractedEntity, DiagnosticResult, CancerPrediction, RiskScores } from '../types';
-import { getDefaultPatient, mapEntitiesToPatient } from '../utils/nerUtils';
+import { getDefaultPatient } from '../utils/nerUtils';
 import { calculateRiskScores } from '../utils/predictionUtils';
 import ClinicalNotesInput from './ClinicalNotesInput';
 import PatientInfoForm from './PatientInfoForm';
@@ -62,8 +62,6 @@ const Analysis = () => {
 
   const handleNotesProcessed = (entities: ExtractedEntity[]) => {
     setExtractedEntities(entities);
-    const updatedPatient = mapEntitiesToPatient(entities, patient);
-    setPatient(updatedPatient);
     setCurrentStep('info');
   };
 
@@ -120,9 +118,9 @@ const Analysis = () => {
   if (currentStep === 'initial') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Patient Analysis</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">AI-Powered Patient Analysis</h1>
         <p className="text-gray-600 mb-8 text-center max-w-md">
-          Start a new analysis by creating a new patient record or selecting an existing patient.
+          Start a comprehensive analysis using AI-powered clinical note processing and automated form population.
         </p>
         <Button
           onClick={() => setIsAnalysisModalOpen(true)}
@@ -154,7 +152,7 @@ const Analysis = () => {
       <div className="mb-8">
         <nav className="flex justify-center">
           <ol className="flex items-center w-full max-w-3xl">
-            {['CT Scan Analysis', 'Clinical Notes', 'Patient Information', 'Risk Assessment'].map((step, index) => {
+            {['CT Scan Analysis', 'AI Clinical Notes', 'Patient Information', 'Risk Assessment'].map((step, index) => {
               const isActive = index === 
                 (currentStep === 'scan' ? 0 : 
                  currentStep === 'notes' ? 1 : 
@@ -175,8 +173,8 @@ const Analysis = () => {
                           : 'bg-gray-200 text-gray-600'
                     }`}>
                       {isCompleted ? (
-                        <svg className="w-4 h-4\" fill="none\" stroke="currentColor\" viewBox="0 0 24 24">
-                          <path strokeLinecap="round\" strokeLinejoin="round\" strokeWidth="2\" d="M5 13l4 4L19 7" />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                       ) : (
                         <span>{index + 1}</span>
@@ -225,6 +223,7 @@ const Analysis = () => {
                   patient={patient} 
                   onChange={handlePatientChange}
                   onSubmit={handlePatientDataSubmit}
+                  extractedEntities={extractedEntities}
                 />
               </div>
               <div className="lg:col-span-1">
