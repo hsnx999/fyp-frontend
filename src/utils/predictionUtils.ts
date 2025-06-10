@@ -36,22 +36,22 @@ export const predictCancerType = (imageFile: File | null): CancerPrediction => {
   return { type, confidence };
 };
 
-// Rule-based risk calculation
+// Enhanced rule-based risk calculation using the new comprehensive patient data
 export const calculateRiskScores = (patient: Patient, cancerType: string): RiskScores => {
-  let recurrenceRisk = 0.5;
-  let complicationRisk = 0.5;
-  let survivalProbability = 0.5;
+  let recurrenceRisk = 0.3; // Base risk
+  let complicationRisk = 0.3; // Base risk
+  let survivalProbability = 0.7; // Base survival probability
   
   // Age factor
   if (patient.age !== null) {
     if (patient.age > 70) {
+      recurrenceRisk += 0.15;
+      complicationRisk += 0.2;
+      survivalProbability -= 0.25;
+    } else if (patient.age > 60) {
       recurrenceRisk += 0.1;
       complicationRisk += 0.15;
-      survivalProbability -= 0.2;
-    } else if (patient.age > 60) {
-      recurrenceRisk += 0.05;
-      complicationRisk += 0.1;
-      survivalProbability -= 0.1;
+      survivalProbability -= 0.15;
     } else if (patient.age < 50) {
       recurrenceRisk -= 0.05;
       complicationRisk -= 0.05;
@@ -59,82 +59,90 @@ export const calculateRiskScores = (patient: Patient, cancerType: string): RiskS
     }
   }
   
-  // Smoking factor
-  if (patient.smoking === 'current') {
-    recurrenceRisk += 0.15;
-    complicationRisk += 0.15;
-    survivalProbability -= 0.15;
-  } else if (patient.smoking === 'former') {
-    recurrenceRisk += 0.08;
-    complicationRisk += 0.1;
-    survivalProbability -= 0.08;
-  } else if (patient.smoking === 'never') {
-    recurrenceRisk -= 0.1;
-    complicationRisk -= 0.05;
-    survivalProbability += 0.1;
-  }
+  // Risk factors (scale 1-9, higher values increase risk)
+  const riskFactorWeight = 0.02; // Each point adds 2% risk
   
-  // Chronic lung disease factor
-  if (patient.chronicLungDisease === 'severe') {
-    recurrenceRisk += 0.08;
-    complicationRisk += 0.15;
-    survivalProbability -= 0.12;
-  } else if (patient.chronicLungDisease === 'moderate') {
-    recurrenceRisk += 0.05;
-    complicationRisk += 0.08;
-    survivalProbability -= 0.06;
-  }
+  // Smoking (highest impact)
+  const smokingImpact = (patient.smoking - 1) * 0.04;
+  recurrenceRisk += smokingImpact;
+  complicationRisk += smokingImpact;
+  survivalProbability -= smokingImpact;
   
-  // Weight loss factor
-  if (patient.weightLoss === 'severe') {
-    recurrenceRisk += 0.1;
-    complicationRisk += 0.12;
-    survivalProbability -= 0.15;
-  } else if (patient.weightLoss === 'moderate') {
-    recurrenceRisk += 0.05;
-    complicationRisk += 0.05;
-    survivalProbability -= 0.07;
-  }
+  // Other risk factors
+  const riskFactors = [
+    patient.airPollution,
+    patient.alcoholUse,
+    patient.dustAllergy,
+    patient.occupationalHazards,
+    patient.geneticRisk,
+    patient.chronicLungDisease,
+    patient.passiveSmoker
+  ];
   
-  // Oxygen therapy factor
-  if (patient.oxygenTherapy === 'yes') {
-    complicationRisk += 0.12;
-    survivalProbability -= 0.1;
-  }
+  riskFactors.forEach(factor => {
+    const impact = (factor - 1) * riskFactorWeight;
+    recurrenceRisk += impact;
+    complicationRisk += impact;
+    survivalProbability -= impact;
+  });
   
-  // Family history factor
-  if (patient.familyHistory === 'positive') {
-    recurrenceRisk += 0.07;
-    survivalProbability -= 0.05;
-  }
+  // Obesity impact
+  const obesityImpact = (patient.obesity - 1) * 0.025;
+  complicationRisk += obesityImpact;
+  survivalProbability -= obesityImpact * 0.5;
+  
+  // Balanced diet (protective factor - higher is better)
+  const dietImpact = (patient.balancedDiet - 1) * 0.015;
+  recurrenceRisk -= dietImpact;
+  survivalProbability += dietImpact;
+  
+  // Symptoms (scale 1-9, higher values indicate worse prognosis)
+  const symptomWeight = 0.015;
+  
+  const symptoms = [
+    patient.chestPain,
+    patient.coughingOfBlood,
+    patient.fatigue,
+    patient.weightLoss,
+    patient.shortnessOfBreath,
+    patient.wheezing,
+    patient.swallowingDifficulty,
+    patient.clubbingOfFingerNails,
+    patient.frequentCold,
+    patient.dryCough,
+    patient.snoring
+  ];
+  
+  symptoms.forEach(symptom => {
+    const impact = (symptom - 1) * symptomWeight;
+    recurrenceRisk += impact;
+    complicationRisk += impact;
+    survivalProbability -= impact;
+  });
   
   // Cancer type factor
-  if (cancerType === 'Small Cell Lung Cancer') {
-    recurrenceRisk += 0.15;
-    survivalProbability -= 0.15;
-  } else if (cancerType === 'Adenocarcinoma') {
-    recurrenceRisk += 0.05;
-  } else if (cancerType === 'Squamous Cell Carcinoma') {
-    recurrenceRisk += 0.08;
-    survivalProbability -= 0.05;
-  }
-  
-  // Obesity & diet factors
-  if (patient.obesity === 'yes') {
-    complicationRisk += 0.08;
-    survivalProbability -= 0.05;
-  }
-  
-  if (patient.balancedDiet === 'no') {
-    survivalProbability -= 0.03;
-  } else if (patient.balancedDiet === 'yes') {
-    survivalProbability += 0.03;
-  }
-  
-  // Exposure to toxins
-  if (patient.exposureToToxins === 'yes') {
-    recurrenceRisk += 0.07;
-    survivalProbability -= 0.05;
+  switch (cancerType.toLowerCase()) {
+    case 'small cell lung cancer':
+      recurrenceRisk += 0.2;
+      survivalProbability -= 0.2;
+      break;
+    case 'adenocarcinoma':
+      recurrenceRisk += 0.05;
+      break;
+    case 'squamous cell carcinoma':
+    case 'squamous':
+      recurrenceRisk += 0.08;
+      survivalProbability -= 0.05;
+      break;
+    case 'large cell carcinoma':
+      recurrenceRisk += 0.12;
+      survivalProbability -= 0.1;
+      break;
+    case 'normal':
+      recurrenceRisk -= 0.2;
+      complicationRisk -= 0.2;
+      survivalProbability += 0.3;
+      break;
   }
   
   // Normalize values between 0 and 1

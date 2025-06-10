@@ -1,15 +1,25 @@
-import React, { useMemo } from 'react';
-import { RiskScores, CancerPrediction } from '../types';
+import React, { useMemo, useEffect, useState } from 'react';
+import { RiskScores, CancerPrediction, Patient } from '../types';
+import { calculateRiskScores } from '../utils/predictionUtils';
 
 interface RiskScoresDisplayProps {
-  riskScores: RiskScores;
   cancerPrediction: CancerPrediction;
+  patient: Patient;
 }
 
 const RiskScoresDisplay: React.FC<RiskScoresDisplayProps> = ({ 
-  riskScores, 
-  cancerPrediction 
+  cancerPrediction,
+  patient
 }) => {
+  const [riskScores, setRiskScores] = useState<RiskScores | null>(null);
+
+  useEffect(() => {
+    if (cancerPrediction && patient) {
+      const scores = calculateRiskScores(patient, cancerPrediction.type);
+      setRiskScores(scores);
+    }
+  }, [cancerPrediction, patient]);
+
   const formatPercentage = (value: number) => {
     return `${Math.round(value * 100)}%`;
   };
@@ -43,14 +53,24 @@ const RiskScoresDisplay: React.FC<RiskScoresDisplayProps> = ({
   };
 
   // Memoize formatted risk scores to avoid recalculating on every render
-  const formattedRiskScores = useMemo(() => ({
-    recurrenceRisk: formatPercentage(riskScores.recurrenceRisk),
-    complicationRisk: formatPercentage(riskScores.complicationRisk),
-    survivalProbability: formatPercentage(riskScores.survivalProbability),
-  }), [riskScores]);
+  const formattedRiskScores = useMemo(() => {
+    if (!riskScores) return null;
+    return {
+      recurrenceRisk: formatPercentage(riskScores.recurrenceRisk),
+      complicationRisk: formatPercentage(riskScores.complicationRisk),
+      survivalProbability: formatPercentage(riskScores.survivalProbability),
+    };
+  }, [riskScores]);
 
-  if (!riskScores || !cancerPrediction) {
-    return <div className="text-center text-red-500">Data is unavailable.</div>;
+  if (!riskScores || !cancerPrediction || !formattedRiskScores) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="text-center text-gray-500">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
+          Calculating risk assessment...
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -135,7 +155,7 @@ const RiskScoresDisplay: React.FC<RiskScoresDisplayProps> = ({
       
       <div className="mt-6 text-sm text-gray-500">
         <p className="font-medium mb-1">Risk Assessment Disclaimer:</p>
-        <p>These risk scores are derived from a rule-based algorithm using the provided patient data. They should be used as a clinical decision support tool only and not as a sole basis for treatment decisions. Always exercise clinical judgment and consider the full patient context.</p>
+        <p>These risk scores are derived from a comprehensive algorithm using the provided patient data including symptoms, risk factors, and cancer type. They should be used as a clinical decision support tool only and not as a sole basis for treatment decisions. Always exercise clinical judgment and consider the full patient context.</p>
       </div>
     </div>
   );

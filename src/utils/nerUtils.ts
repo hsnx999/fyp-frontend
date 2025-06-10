@@ -19,13 +19,13 @@ export const processClinicaNotes = (notes: string): ExtractedEntity[] => {
   if (/\b(male|man|gentleman|boy)\b/i.test(notes)) {
     entities.push({
       entity: 'gender',
-      value: 'male',
+      value: 'Male',
       confidence: 0.98,
     });
   } else if (/\b(female|woman|lady|girl)\b/i.test(notes)) {
     entities.push({
       entity: 'gender',
-      value: 'female',
+      value: 'Female',
       confidence: 0.98,
     });
   }
@@ -34,25 +34,25 @@ export const processClinicaNotes = (notes: string): ExtractedEntity[] => {
   if (/\bnever smok(ed|er|ing)\b/i.test(lowerNotes)) {
     entities.push({
       entity: 'smoking',
-      value: 'never',
+      value: '1',
       confidence: 0.92,
     });
   } else if (/\bformer smok(ed|er|ing)\b/i.test(lowerNotes) || /\bquit smoking\b/i.test(lowerNotes)) {
     entities.push({
       entity: 'smoking',
-      value: 'former',
+      value: '4',
       confidence: 0.9,
     });
   } else if (/\bcurrent smok(ed|er|ing)\b/i.test(lowerNotes) || /\bactive smok(ed|er|ing)\b/i.test(lowerNotes)) {
     entities.push({
       entity: 'smoking',
-      value: 'current',
+      value: '8',
       confidence: 0.94,
     });
   } else if (/\b\d+ pack.?(year|yr)\b/i.test(lowerNotes) || /\bsmok(ed|er|ing)\b/i.test(lowerNotes)) {
     entities.push({
       entity: 'smoking',
-      value: 'history',
+      value: '6',
       confidence: 0.85,
     });
   }
@@ -61,13 +61,13 @@ export const processClinicaNotes = (notes: string): ExtractedEntity[] => {
   if (/\b(copd|chronic obstructive pulmonary disease)\b/i.test(lowerNotes)) {
     entities.push({
       entity: 'chronicLungDisease',
-      value: 'severe',
+      value: '8',
       confidence: 0.93,
     });
   } else if (/\b(asthma|bronchitis|emphysema)\b/i.test(lowerNotes)) {
     entities.push({
       entity: 'chronicLungDisease',
-      value: 'moderate',
+      value: '5',
       confidence: 0.88,
     });
   }
@@ -76,71 +76,83 @@ export const processClinicaNotes = (notes: string): ExtractedEntity[] => {
   if (/\b(significant|severe|substantial) weight loss\b/i.test(lowerNotes)) {
     entities.push({
       entity: 'weightLoss',
-      value: 'severe',
+      value: '8',
       confidence: 0.91,
     });
   } else if (/\bweight loss\b/i.test(lowerNotes)) {
     entities.push({
       entity: 'weightLoss',
-      value: 'moderate',
+      value: '5',
       confidence: 0.87,
     });
   }
 
-  // Oxygen therapy
-  if (/\b(home oxygen|oxygen therapy|supplemental oxygen)\b/i.test(lowerNotes)) {
+  // Chest pain
+  if (/\b(severe|intense) chest pain\b/i.test(lowerNotes)) {
     entities.push({
-      entity: 'oxygenTherapy',
-      value: 'yes',
-      confidence: 0.94,
-    });
-  }
-
-  // Family history
-  if (/\bfamily history\b/i.test(lowerNotes) && /\b(cancer|lung cancer|malignancy)\b/i.test(lowerNotes)) {
-    entities.push({
-      entity: 'familyHistory',
-      value: 'positive',
-      confidence: 0.89,
-    });
-  }
-
-  // Obesity
-  if (/\b(obese|obesity|overweight)\b/i.test(lowerNotes)) {
-    entities.push({
-      entity: 'obesity',
-      value: 'yes',
+      entity: 'chestPain',
+      value: '8',
       confidence: 0.9,
     });
-  } else if (/\b(normal weight|healthy weight)\b/i.test(lowerNotes)) {
+  } else if (/\bchest pain\b/i.test(lowerNotes)) {
     entities.push({
-      entity: 'obesity',
-      value: 'no',
+      entity: 'chestPain',
+      value: '5',
       confidence: 0.85,
     });
   }
 
-  // Balanced diet
-  if (/\b(balanced diet|healthy diet|nutritious diet)\b/i.test(lowerNotes)) {
+  // Shortness of breath
+  if (/\b(severe|extreme) (shortness of breath|dyspnea)\b/i.test(lowerNotes)) {
     entities.push({
-      entity: 'balancedDiet',
-      value: 'yes',
-      confidence: 0.82,
+      entity: 'shortnessOfBreath',
+      value: '8',
+      confidence: 0.9,
     });
-  } else if (/\b(poor diet|unbalanced diet|unhealthy eating)\b/i.test(lowerNotes)) {
+  } else if (/\b(shortness of breath|dyspnea)\b/i.test(lowerNotes)) {
     entities.push({
-      entity: 'balancedDiet',
-      value: 'no',
-      confidence: 0.8,
+      entity: 'shortnessOfBreath',
+      value: '5',
+      confidence: 0.85,
     });
   }
 
-  // Exposure to toxins
-  if (/\b(asbestos|radon|radiation|chemical|occupational hazard)\b/i.test(lowerNotes)) {
+  // Fatigue
+  if (/\b(severe|extreme) fatigue\b/i.test(lowerNotes)) {
     entities.push({
-      entity: 'exposureToToxins',
-      value: 'yes',
+      entity: 'fatigue',
+      value: '8',
       confidence: 0.88,
+    });
+  } else if (/\bfatigue\b/i.test(lowerNotes)) {
+    entities.push({
+      entity: 'fatigue',
+      value: '5',
+      confidence: 0.82,
+    });
+  }
+
+  // Coughing of blood
+  if (/\b(hemoptysis|coughing blood|blood in sputum)\b/i.test(lowerNotes)) {
+    entities.push({
+      entity: 'coughingOfBlood',
+      value: '7',
+      confidence: 0.92,
+    });
+  }
+
+  // Dry cough
+  if (/\b(persistent|chronic) dry cough\b/i.test(lowerNotes)) {
+    entities.push({
+      entity: 'dryCough',
+      value: '7',
+      confidence: 0.88,
+    });
+  } else if (/\bdry cough\b/i.test(lowerNotes)) {
+    entities.push({
+      entity: 'dryCough',
+      value: '5',
+      confidence: 0.82,
     });
   }
 
@@ -159,28 +171,28 @@ export const mapEntitiesToPatient = (entities: ExtractedEntity[], initialPatient
         patient.gender = entity.value;
         break;
       case 'smoking':
-        patient.smoking = entity.value;
+        patient.smoking = parseInt(entity.value, 10);
         break;
       case 'chronicLungDisease':
-        patient.chronicLungDisease = entity.value;
+        patient.chronicLungDisease = parseInt(entity.value, 10);
         break;
       case 'weightLoss':
-        patient.weightLoss = entity.value;
+        patient.weightLoss = parseInt(entity.value, 10);
         break;
-      case 'oxygenTherapy':
-        patient.oxygenTherapy = entity.value;
+      case 'chestPain':
+        patient.chestPain = parseInt(entity.value, 10);
         break;
-      case 'familyHistory':
-        patient.familyHistory = entity.value;
+      case 'shortnessOfBreath':
+        patient.shortnessOfBreath = parseInt(entity.value, 10);
         break;
-      case 'obesity':
-        patient.obesity = entity.value;
+      case 'fatigue':
+        patient.fatigue = parseInt(entity.value, 10);
         break;
-      case 'balancedDiet':
-        patient.balancedDiet = entity.value;
+      case 'coughingOfBlood':
+        patient.coughingOfBlood = parseInt(entity.value, 10);
         break;
-      case 'exposureToToxins':
-        patient.exposureToToxins = entity.value;
+      case 'dryCough':
+        patient.dryCough = parseInt(entity.value, 10);
         break;
     }
   });
@@ -192,12 +204,32 @@ export const getDefaultPatient = (): Patient => ({
   id: Math.random().toString(36).substring(2, 9),
   age: null,
   gender: '',
-  smoking: '',
-  obesity: '',
-  balancedDiet: '',
-  chronicLungDisease: '',
-  familyHistory: '',
-  weightLoss: '',
-  oxygenTherapy: '',
-  exposureToToxins: '',
+  
+  // Risk Factors (default to 1 - lowest level)
+  airPollution: 1,
+  alcoholUse: 1,
+  dustAllergy: 1,
+  occupationalHazards: 1,
+  geneticRisk: 1,
+  chronicLungDisease: 1,
+  balancedDiet: 1,
+  obesity: 1,
+  smoking: 1,
+  passiveSmoker: 1,
+  
+  // Symptoms (default to 1 - absent/mild)
+  chestPain: 1,
+  coughingOfBlood: 1,
+  fatigue: 1,
+  weightLoss: 1,
+  shortnessOfBreath: 1,
+  wheezing: 1,
+  swallowingDifficulty: 1,
+  clubbingOfFingerNails: 1,
+  frequentCold: 1,
+  dryCough: 1,
+  snoring: 1,
+  
+  // Cancer Type
+  cancerType: '',
 });

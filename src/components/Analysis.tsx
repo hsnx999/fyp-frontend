@@ -25,25 +25,24 @@ const Analysis = () => {
   const [cancerPrediction, setCancerPrediction] = useState<CancerPrediction | null>(null);
   const [riskScores, setRiskScores] = useState<RiskScores | null>(null);
   const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
-  const [patients, setPatients] = useState<Patient[]>([]);  // State to store fetched patients
+  const [patients, setPatients] = useState<Patient[]>([]);
 
   useEffect(() => {
-    // Function to fetch patients from Supabase
     const fetchPatientsFromDatabase = async () => {
       const { data, error } = await supabase
         .from('patients')
-        .select('*');  // Assuming your table is 'patients'
+        .select('*');
 
       if (error) {
         console.error("Error fetching patients:", error);
         return [];
       }
 
-      setPatients(data);  // Update the patients state with the fetched data
+      setPatients(data);
     };
 
-    fetchPatientsFromDatabase();  // Fetch patients when the component mounts
-  }, []);  // Empty dependency array means it runs once after the first render
+    fetchPatientsFromDatabase();
+  }, []);
 
   const handleCreateNewPatient = () => {
     setIsAnalysisModalOpen(false);
@@ -69,6 +68,18 @@ const Analysis = () => {
   };
 
   const handlePatientDataSubmit = () => {
+    if (cancerPrediction) {
+      const scores = calculateRiskScores(patient, cancerPrediction.type);
+      setRiskScores(scores);
+      
+      const result: DiagnosticResult = {
+        patient,
+        cancerPrediction,
+        riskScores: scores,
+        extractedEntities
+      };
+      setDiagnosticResult(result);
+    }
     setCurrentStep('results');
   };
 
@@ -128,12 +139,11 @@ const Analysis = () => {
           onSelectExisting={handleSelectExistingPatient}
         />
 
-        {/* PatientSelectionModal now uses fetched patients */}
         <PatientSelectionModal
           isOpen={isPatientSelectionModalOpen}
           onClose={() => setIsPatientSelectionModalOpen(false)}
           onSelect={handlePatientSelected}
-          patients={patients}  // Pass the fetched patients here
+          patients={patients}
         />
       </div>
     );
@@ -209,15 +219,15 @@ const Analysis = () => {
         
         {currentStep === 'info' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
                 <PatientInfoForm 
                   patient={patient} 
                   onChange={handlePatientChange}
                   onSubmit={handlePatientDataSubmit}
                 />
               </div>
-              <div className="md:col-span-1">
+              <div className="lg:col-span-1">
                 <ExtractedEntitiesDisplay entities={extractedEntities} />
               </div>
             </div>
@@ -231,14 +241,14 @@ const Analysis = () => {
         
         {currentStep === 'results' && (
           <div className="space-y-6">
-            {cancerPrediction && riskScores && (
+            {cancerPrediction && (
               <RiskScoresDisplay
                 cancerPrediction={cancerPrediction} 
-                riskScores={riskScores} 
+                patient={patient}
               />
             )}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 bg-white rounded-lg shadow-md p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Patient Summary</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -250,25 +260,17 @@ const Analysis = () => {
                     <p className="text-lg capitalize">{patient.gender}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Smoking Status</p>
-                    <p className="text-lg capitalize">{patient.smoking}</p>
+                    <p className="text-sm font-medium text-gray-500">Cancer Type</p>
+                    <p className="text-lg capitalize">{patient.cancerType}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Chronic Lung Disease</p>
-                    <p className="text-lg capitalize">{patient.chronicLungDisease || 'None'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Family History</p>
-                    <p className="text-lg capitalize">{patient.familyHistory || 'Unknown'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Weight Loss</p>
-                    <p className="text-lg capitalize">{patient.weightLoss || 'None'}</p>
+                    <p className="text-sm font-medium text-gray-500">Smoking Level</p>
+                    <p className="text-lg">{patient.smoking}/9</p>
                   </div>
                 </div>
                 <ExportResults result={diagnosticResult} />
               </div>
-              <div className="md:col-span-1">
+              <div className="lg:col-span-1">
                 <ExtractedEntitiesDisplay entities={extractedEntities} />
               </div>
             </div>
