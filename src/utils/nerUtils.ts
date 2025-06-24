@@ -204,6 +204,11 @@ export const getDefaultPatient = (): Patient => ({
   id: Math.random().toString(36).substring(2, 9),
   age: null,
   gender: '',
+  dateOfBirth: '',
+  phoneNumber: '',
+  emailAddress: '',
+  address: '',
+  medicalHistorySummary: '',
   
   // Risk Factors (default to 1 - lowest level)
   airPollution: 1,

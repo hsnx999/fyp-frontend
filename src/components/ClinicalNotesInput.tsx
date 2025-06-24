@@ -4,10 +4,16 @@ import { ExtractedEntity } from '../types';
 import { Brain, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
 interface ClinicalNotesInputProps {
-  onProcess: (extractedEntities: ExtractedEntity[]) => void;
+  onProcess: (extractedEntities: ExtractedEntity[], notesContent: string) => void;
+  patientId: string;
+  analysisId: string;
 }
 
-const ClinicalNotesInput: React.FC<ClinicalNotesInputProps> = ({ onProcess }) => {
+const ClinicalNotesInput: React.FC<ClinicalNotesInputProps> = ({ 
+  onProcess, 
+  patientId, 
+  analysisId 
+}) => {
   const [notes, setNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +38,11 @@ const ClinicalNotesInput: React.FC<ClinicalNotesInputProps> = ({ onProcess }) =>
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ notes }),
+        body: JSON.stringify({ 
+          notes,
+          patient_id: patientId,
+          analysis_id: analysisId
+        }),
       });
 
       if (!response.ok) {
@@ -52,7 +62,7 @@ const ClinicalNotesInput: React.FC<ClinicalNotesInputProps> = ({ onProcess }) =>
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setExtractedEntities(data.entities);
-      onProcess(data.entities);
+      onProcess(data.entities, notes);
       
       setProcessingStage('Complete!');
       
@@ -61,7 +71,7 @@ const ClinicalNotesInput: React.FC<ClinicalNotesInputProps> = ({ onProcess }) =>
       setError(
         err instanceof Error 
           ? `AI processing failed: ${err.message}` 
-          : "There was an error extracting entities. Please check if the AI model server is running."
+          : "There was an error extracting entities. Please check if the AI model server is running on localhost:5000."
       );
     } finally {
       setIsProcessing(false);
@@ -98,8 +108,16 @@ const ClinicalNotesInput: React.FC<ClinicalNotesInputProps> = ({ onProcess }) =>
       
       <p className="text-sm text-gray-600 mb-4">
         Enter the patient's clinical notes below. Our AI model will automatically extract medical entities 
-        and populate the corresponding form fields with appropriate severity ratings.
+        and populate the corresponding form fields with appropriate severity ratings. Results will be saved to the patient's record.
       </p>
+
+      {patientId && analysisId && (
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <strong>Patient ID:</strong> {patientId.slice(0, 8)}... | <strong>Analysis ID:</strong> {analysisId}
+          </p>
+        </div>
+      )}
       
       <div className="space-y-4">
         <div>
@@ -162,7 +180,7 @@ const ClinicalNotesInput: React.FC<ClinicalNotesInputProps> = ({ onProcess }) =>
                   Successfully extracted {extractedEntities.length} entities
                 </p>
                 <p className="text-xs text-green-600">
-                  Form fields have been automatically populated based on AI analysis
+                  Form fields have been automatically populated and results saved to patient record
                 </p>
               </div>
             </div>

@@ -2,17 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
-import { X, Search, Filter } from 'lucide-react';
-
-interface Patient {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
-  lastVisit: string;
-  status: string;
-  diagnosis: string;
-}
+import { X, Search, Calendar } from 'lucide-react';
+import { Patient } from '../../types';
+import { convertISOToDDMMYYYY } from '../../utils/dateUtils';
 
 interface PatientSelectionModalProps {
   isOpen: boolean;
@@ -38,13 +30,15 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = 
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.id.toLowerCase().includes(searchTerm.toLowerCase());
+      patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesGender = !filters.gender || patient.gender === filters.gender;
     
     const matchesAge = !filters.ageRange || (() => {
       const age = patient.age;
+      if (!age) return false;
       switch (filters.ageRange) {
         case '0-30': return age >= 0 && age <= 30;
         case '31-50': return age >= 31 && age <= 50;
@@ -54,14 +48,12 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
       }
     })();
 
-    const matchesStatus = !filters.status || patient.status === filters.status;
-
-    return matchesSearch && matchesGender && matchesAge && matchesStatus;
+    return matchesSearch && matchesGender && matchesAge;
   });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl relative overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl relative overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
         
         <button
@@ -79,7 +71,7 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search by name or ID..."
+                placeholder="Search by name, ID, or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -109,40 +101,21 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
                 <option value="51-70">51-70</option>
                 <option value="70+">70+</option>
               </Select>
-
-              <Select
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="w-32"
-              >
-                <option value="">All Status</option>
-                <option value="Stable">Stable</option>
-                <option value="Critical">Critical</option>
-              </Select>
             </div>
           </div>
 
-          <div className="overflow-y-auto max-h-[calc(100vh-300px)] rounded-lg border border-gray-200">
+          <div className="overflow-y-auto max-h-[calc(100vh-400px)] rounded-lg border border-gray-200">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
+                    Patient Info
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
+                    Contact
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Age
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Gender
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last Visit
+                    Details
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Action
@@ -150,48 +123,77 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPatients.map((patient) => (
-                  <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {patient.id.slice(0, 8)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {patient.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {patient.age}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {patient.gender}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          patient.status === 'Critical'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
-                      >
-                        {patient.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(patient.lastVisit).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button
-                        onClick={() => onSelect(patient)}
-                        variant="outline"
-                        size="sm"
-                        className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors"
-                      >
-                        Select
-                      </Button>
+                {filteredPatients.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                      No patients found matching your criteria
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredPatients.map((patient) => (
+                    <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {patient.name || 'Unnamed Patient'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {patient.id.slice(0, 8)}...
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {patient.age} years • {patient.gender}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {patient.phoneNumber && (
+                            <div>📞 {patient.phoneNumber}</div>
+                          )}
+                          {patient.emailAddress && (
+                            <div>✉️ {patient.emailAddress}</div>
+                          )}
+                          {!patient.phoneNumber && !patient.emailAddress && (
+                            <span className="text-gray-400">No contact info</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {patient.dateOfBirth && (
+                            <div className="flex items-center gap-1">
+                              <Calendar size={14} />
+                              <span>DOB: {convertISOToDDMMYYYY(patient.dateOfBirth)}</span>
+                            </div>
+                          )}
+                          {patient.address && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              📍 {patient.address.length > 30 ? patient.address.substring(0, 30) + '...' : patient.address}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Button
+                          onClick={() => onSelect(patient)}
+                          variant="outline"
+                          size="sm"
+                          className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors"
+                        >
+                          Select
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
           </div>
         </div>
       </div>

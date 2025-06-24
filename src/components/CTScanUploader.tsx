@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { Button } from './ui/Button';
+import { CancerPrediction } from '../types';
 
 interface CTScanUploaderProps {
   onPrediction: (prediction: CancerPrediction) => void;
+  patientId: string;
+  analysisId: string;
 }
 
-const CTScanUploader: React.FC<CTScanUploaderProps> = ({ onPrediction }) => {
+const CTScanUploader: React.FC<CTScanUploaderProps> = ({ 
+  onPrediction, 
+  patientId, 
+  analysisId 
+}) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -42,6 +49,8 @@ const CTScanUploader: React.FC<CTScanUploaderProps> = ({ onPrediction }) => {
     setIsProcessing(true);
     const formData = new FormData();
     formData.append("image", selectedFile);
+    formData.append("patient_id", patientId);
+    formData.append("analysis_id", analysisId);
   
     try {
       const response = await fetch("http://localhost:5000/api/predict", {
@@ -55,19 +64,26 @@ const CTScanUploader: React.FC<CTScanUploaderProps> = ({ onPrediction }) => {
       onPrediction(prediction);
     } catch (error) {
       console.error("Prediction error:", error);
-      alert("There was an error analyzing the scan.");
+      alert("There was an error analyzing the scan. Please ensure the AI model server is running on localhost:5000.");
     } finally {
       setIsProcessing(false);
     }
   };
 
-
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-3">CT Scan Analysis</h2>
       <p className="text-sm text-gray-600 mb-4">
-        Upload a CT scan image to begin the analysis.
+        Upload a CT scan image to begin the analysis. The results will be automatically saved to the patient's record.
       </p>
+      
+      {patientId && analysisId && (
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <strong>Patient ID:</strong> {patientId.slice(0, 8)}... | <strong>Analysis ID:</strong> {analysisId}
+          </p>
+        </div>
+      )}
       
       <div 
         className={`border-2 border-dashed ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'} rounded-md p-6 mb-4 text-center flex flex-col items-center justify-center`}
