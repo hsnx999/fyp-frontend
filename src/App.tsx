@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import Patients from './components/Patients';
 import PatientDetails from './components/patients/PatientDetails';
 import Analysis from './components/Analysis';
+import AboutUsSection from './components/AboutUsSection';
 import { Stethoscope, LogIn, LayoutDashboard, Users, Activity } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import Sidebar from './components/Sidebar';
@@ -95,6 +96,9 @@ function App() {
               </Button>
             </div>
           </main>
+
+          {/* About Us Section */}
+          <AboutUsSection />
 
           <footer className="bg-transparent z-10 py-4">
             <div className="text-center text-blue-200 text-sm">
