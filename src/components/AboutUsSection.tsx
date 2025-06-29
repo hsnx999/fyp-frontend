@@ -15,17 +15,17 @@ const AboutUsSection: React.FC = () => {
 
   const { elementRef: card1Ref, isVisible: card1Visible } = useScrollAnimation({
     threshold: 0.2,
-    rootMargin: '0px 0px -100px 0px'
+    rootMargin: '0px'
   });
 
   const { elementRef: card2Ref, isVisible: card2Visible } = useScrollAnimation({
     threshold: 0.2,
-    rootMargin: '0px 0px -100px 0px'
+    rootMargin: '0px'
   });
 
   const { elementRef: footerRef, isVisible: footerVisible } = useScrollAnimation({
     threshold: 0.3,
-    rootMargin: '0px 0px -50px 0px'
+    rootMargin: '0px'
   });
 
   const scrollY = useParallaxScroll();
@@ -108,18 +108,19 @@ const AboutUsSection: React.FC = () => {
               <h3 className="text-2xl md:text-3xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors duration-300">
                 Hassan Muhammad Sharif
               </h3>
-              <p className="text-blue-300 font-semibold mb-6 text-lg">Lead AI Research Engineer</p>
+              <p className="text-blue-300 font-semibold mb-6 text-lg">AI & Computer Vision Specialist</p>
               
               <p className="text-blue-100 text-sm md:text-base leading-relaxed mb-8 opacity-90">
-                Hassan specializes in deep learning architectures for medical imaging analysis. With expertise in 
-                convolutional neural networks and computer vision, he leads the development of our CT scan analysis 
-                algorithms, achieving breakthrough accuracy in thoracic cancer detection and classification.
+                Final-year BSc Software Engineering student specializing in machine learning and computer vision. 
+                Hassan has developed expertise in deep learning frameworks like TensorFlow and PyTorch, focusing on 
+                medical image analysis. His capstone project involves creating CNN architectures for automated 
+                thoracic cancer detection from CT scans.
               </p>
 
               <div className="space-y-4">
                 <div className="flex justify-center items-center text-blue-200 text-sm">
                   <BookOpen className="h-5 w-5 mr-2" />
-                  <span className="font-medium">PhD Computer Science</span>
+                  <span className="font-medium">BSc Software Engineering (Final Year)</span>
                 </div>
                 
                 <div className="flex justify-center space-x-4 pt-4">
@@ -165,18 +166,19 @@ const AboutUsSection: React.FC = () => {
               <h3 className="text-2xl md:text-3xl font-bold text-white mb-3 group-hover:text-green-300 transition-colors duration-300">
                 Muhammad Moazam Shakeel
               </h3>
-              <p className="text-green-300 font-semibold mb-6 text-lg">Clinical Data Scientist</p>
+              <p className="text-green-300 font-semibold mb-6 text-lg">Full-Stack Developer & NLP Engineer</p>
               
               <p className="text-blue-100 text-sm md:text-base leading-relaxed mb-8 opacity-90">
-                Moazam bridges the gap between clinical practice and AI technology. His expertise in natural language 
-                processing and clinical informatics drives our automated clinical notes analysis system, enabling 
-                seamless integration of patient data with diagnostic workflows.
+                Final-year BSc Software Engineering student with a passion for healthcare technology and natural 
+                language processing. Moazam combines his software development skills with AI to build the clinical 
+                notes analysis system, utilizing React, Node.js, and Python NLP libraries to create seamless 
+                user experiences for medical professionals.
               </p>
 
               <div className="space-y-4">
                 <div className="flex justify-center items-center text-blue-200 text-sm">
                   <BookOpen className="h-5 w-5 mr-2" />
-                  <span className="font-medium">MS Medical Informatics</span>
+                  <span className="font-medium">BSc Software Engineering (Final Year)</span>
                 </div>
                 
                 <div className="flex justify-center space-x-4 pt-4">
