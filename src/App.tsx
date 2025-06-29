@@ -79,7 +79,7 @@ function App() {
             </div>
           </header>
 
-          <main className="flex-grow flex items-center justify-center px-4">
+          <main className="flex-grow flex items-center justify-center px-4 min-h-screen">
             <div className="text-center max-w-md">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Advanced Thoracic Diagnostics
