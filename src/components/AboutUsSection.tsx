@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Award, BookOpen, Github, Linkedin, Mail } from 'lucide-react';
+import { Users, Award, BookOpen } from 'lucide-react';
 import { useScrollAnimation, useParallaxScroll } from '../hooks/useScrollAnimation';
 
 const AboutUsSection: React.FC = () => {
@@ -123,18 +123,6 @@ const AboutUsSection: React.FC = () => {
                   <BookOpen className="h-5 w-5 mr-2" />
                   <span className="font-medium">BSc Software Engineering (Final Year)</span>
                 </div>
-                
-                <div className="flex justify-center space-x-4 pt-4">
-                  <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors duration-300">
-                    <Github className="h-5 w-5 text-blue-300" />
-                  </a>
-                  <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors duration-300">
-                    <Linkedin className="h-5 w-5 text-blue-300" />
-                  </a>
-                  <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors duration-300">
-                    <Mail className="h-5 w-5 text-blue-300" />
-                  </a>
-                </div>
               </div>
             </div>
           </div>
@@ -180,18 +168,6 @@ const AboutUsSection: React.FC = () => {
                 <div className="flex justify-center items-center text-blue-200 text-sm">
                   <BookOpen className="h-5 w-5 mr-2" />
                   <span className="font-medium">BSc Software Engineering (Final Year)</span>
-                </div>
-                
-                <div className="flex justify-center space-x-4 pt-4">
-                  <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors duration-300">
-                    <Github className="h-5 w-5 text-green-300" />
-                  </a>
-                  <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors duration-300">
-                    <Linkedin className="h-5 w-5 text-green-300" />
-                  </a>
-                  <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors duration-300">
-                    <Mail className="h-5 w-5 text-green-300" />
-                  </a>
                 </div>
               </div>
             </div>

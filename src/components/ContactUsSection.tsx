@@ -164,7 +164,7 @@ const ContactUsSection: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="text-white font-semibold mb-1">Phone Number</h4>
-                    <p className="text-blue-200">+92 300 1234567</p>
+                    <p className="text-blue-200">+92 311 0404697</p>
                     <p className="text-blue-300 text-sm">Available for project inquiries</p>
                   </div>
                 </div>
@@ -176,8 +176,8 @@ const ContactUsSection: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="text-white font-semibold mb-1">University</h4>
-                    <p className="text-blue-200">Final Year BSc Software Engineering</p>
-                    <p className="text-blue-200">Computer Science Department</p>
+                    <p className="text-blue-200">University of Lahore</p>
+                    <p className="text-blue-200">Software Engineering Department</p>
                     <p className="text-blue-300 text-sm">Academic project collaboration</p>
                   </div>
                 </div>
@@ -201,7 +201,9 @@ const ContactUsSection: React.FC = () => {
                 <h4 className="text-white font-semibold mb-4">Connect With Us</h4>
                 <div className="flex space-x-4">
                   <a 
-                    href="#" 
+                    href="https://www.linkedin.com/in/hassan-sharif-81325935a" 
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
                     aria-label="LinkedIn"
                   >
