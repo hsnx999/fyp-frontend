@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Linkedin, CheckCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Linkedin, CheckCircle, AlertCircle } from 'lucide-react';
 import { useScrollAnimation, useParallaxScroll } from '../hooks/useScrollAnimation';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -14,6 +14,7 @@ const ContactUsSection: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { elementRef: sectionRef, isVisible: sectionVisible } = useScrollAnimation({
     threshold: 0.1,
@@ -40,21 +41,41 @@ const ContactUsSection: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    setFormData({ name: '', email: '', subject: '', message: '' });
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
-    // Reset success message after 5 seconds
-    setTimeout(() => setIsSubmitted(false), 5000);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send message');
+      }
+
+      setIsSubmitted(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+
+      // Reset success message after 5 seconds
+      setTimeout(() => setIsSubmitted(false), 5000);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError(err instanceof Error ? err.message : 'Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -131,7 +152,7 @@ const ContactUsSection: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="text-white font-semibold mb-1">Email Address</h4>
-                    <p className="text-blue-200">contact@thorascan.ai</p>
+                    <p className="text-blue-200">70124718@student.uol.edu.pk</p>
                     <p className="text-blue-300 text-sm">For general inquiries and support</p>
                   </div>
                 </div>
@@ -230,6 +251,16 @@ const ContactUsSection: React.FC = () => {
                   <div>
                     <p className="text-green-300 font-semibold">Message sent successfully!</p>
                     <p className="text-green-200 text-sm">We'll get back to you within 24 hours.</p>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-400/30 rounded-lg flex items-center space-x-3">
+                  <AlertCircle className="h-6 w-6 text-red-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-red-300 font-semibold">Error sending message</p>
+                    <p className="text-red-200 text-sm">{error}</p>
                   </div>
                 </div>
               )}
