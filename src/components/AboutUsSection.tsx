@@ -14,18 +14,18 @@ const AboutUsSection: React.FC = () => {
   });
 
   const { elementRef: card1Ref, isVisible: card1Visible } = useScrollAnimation({
-    threshold: 0.2,
-    rootMargin: '0px'
+    threshold: 0.1,
+    rootMargin: '0px 0px 100px 0px'
   });
 
   const { elementRef: card2Ref, isVisible: card2Visible } = useScrollAnimation({
-    threshold: 0.2,
-    rootMargin: '0px'
+    threshold: 0.1,
+    rootMargin: '0px 0px 100px 0px'
   });
 
   const { elementRef: footerRef, isVisible: footerVisible } = useScrollAnimation({
-    threshold: 0.3,
-    rootMargin: '0px'
+    threshold: 0.1,
+    rootMargin: '0px 0px 100px 0px'
   });
 
   const scrollY = useParallaxScroll();
@@ -79,6 +79,7 @@ const AboutUsSection: React.FC = () => {
           </p>
         </div>
 
+        {/* Team Cards Container */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Hassan Muhammad Sharif */}
           <div 
