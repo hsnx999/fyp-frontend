@@ -37,17 +37,17 @@ const AboutUsSection: React.FC = () => {
         sectionVisible ? 'opacity-100' : 'opacity-0'
       }`}
       style={{
-        backgroundPosition: `center ${scrollY * 0.5}px`,
+        backgroundPosition: `center ${scrollY * 0.3}px`,
       }}
     >
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div 
-          className={`absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl transition-all duration-2000 ease-out ${
+          className={`absolute top-20 left-10 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl transition-all duration-2000 ease-out ${
             sectionVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
           }`}
           style={{
-            transform: `translateY(${scrollY * 0.1}px) scale(${sectionVisible ? 1 : 0.75})`,
+            transform: `translateY(${scrollY * 0.15}px) scale(${sectionVisible ? 1 : 0.75})`,
           }}
         />
         <div 
@@ -55,7 +55,7 @@ const AboutUsSection: React.FC = () => {
             sectionVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
           }`}
           style={{
-            transform: `translateY(${scrollY * -0.1}px) scale(${sectionVisible ? 1 : 0.75})`,
+            transform: `translateY(${scrollY * -0.15}px) scale(${sectionVisible ? 1 : 0.75})`,
           }}
         />
       </div>
