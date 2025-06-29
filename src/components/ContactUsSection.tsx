@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Facebook, Twitter, Linkedin, CheckCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Linkedin, CheckCircle } from 'lucide-react';
 import { useScrollAnimation, useParallaxScroll } from '../hooks/useScrollAnimation';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -143,56 +143,42 @@ const ContactUsSection: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="text-white font-semibold mb-1">Phone Number</h4>
-                    <p className="text-blue-200">+1 (555) 123-4567</p>
-                    <p className="text-blue-300 text-sm">Monday - Friday, 9:00 AM - 6:00 PM EST</p>
+                    <p className="text-blue-200">+92 300 1234567</p>
+                    <p className="text-blue-300 text-sm">Available for project inquiries</p>
                   </div>
                 </div>
 
-                {/* Address */}
+                {/* University */}
                 <div className="flex items-start space-x-4 group">
                   <div className="bg-purple-500/20 p-3 rounded-full group-hover:bg-purple-500/30 transition-colors duration-300">
                     <MapPin className="h-6 w-6 text-purple-400" />
                   </div>
                   <div>
-                    <h4 className="text-white font-semibold mb-1">Office Address</h4>
-                    <p className="text-blue-200">123 Medical Innovation Drive</p>
-                    <p className="text-blue-200">Healthcare Tech District</p>
-                    <p className="text-blue-200">Boston, MA 02101</p>
+                    <h4 className="text-white font-semibold mb-1">University</h4>
+                    <p className="text-blue-200">Final Year BSc Software Engineering</p>
+                    <p className="text-blue-200">Computer Science Department</p>
+                    <p className="text-blue-300 text-sm">Academic project collaboration</p>
                   </div>
                 </div>
 
-                {/* Business Hours */}
+                {/* Availability */}
                 <div className="flex items-start space-x-4 group">
                   <div className="bg-orange-500/20 p-3 rounded-full group-hover:bg-orange-500/30 transition-colors duration-300">
                     <Clock className="h-6 w-6 text-orange-400" />
                   </div>
                   <div>
-                    <h4 className="text-white font-semibold mb-1">Business Hours</h4>
-                    <p className="text-blue-200">Monday - Friday: 9:00 AM - 6:00 PM EST</p>
-                    <p className="text-blue-200">Saturday: 10:00 AM - 2:00 PM EST</p>
-                    <p className="text-blue-200">Sunday: Closed</p>
+                    <h4 className="text-white font-semibold mb-1">Availability</h4>
+                    <p className="text-blue-200">Available for project discussions</p>
+                    <p className="text-blue-200">Response time: Within 24 hours</p>
+                    <p className="text-blue-300 text-sm">Best reached via email</p>
                   </div>
                 </div>
               </div>
 
               {/* Social Media Links */}
               <div className="mt-8 pt-8 border-t border-white/20">
-                <h4 className="text-white font-semibold mb-4">Follow Us</h4>
+                <h4 className="text-white font-semibold mb-4">Connect With Us</h4>
                 <div className="flex space-x-4">
-                  <a 
-                    href="#" 
-                    className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
-                    aria-label="Facebook"
-                  >
-                    <Facebook className="h-5 w-5 text-blue-400" />
-                  </a>
-                  <a 
-                    href="#" 
-                    className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
-                    aria-label="Twitter"
-                  >
-                    <Twitter className="h-5 w-5 text-blue-400" />
-                  </a>
                   <a 
                     href="#" 
                     className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
@@ -201,6 +187,9 @@ const ContactUsSection: React.FC = () => {
                     <Linkedin className="h-5 w-5 text-blue-400" />
                   </a>
                 </div>
+                <p className="text-blue-300 text-sm mt-3">
+                  Follow our professional journey and project updates
+                </p>
               </div>
             </div>
 
@@ -211,8 +200,8 @@ const ContactUsSection: React.FC = () => {
                 <div>
                   <h4 className="text-white font-semibold mb-1">Response Time</h4>
                   <p className="text-blue-200 text-sm">
-                    We typically respond to all inquiries within 24 hours during business days. 
-                    For urgent matters, please call our phone number directly.
+                    We typically respond to all inquiries within 24 hours. 
+                    For academic collaboration or project discussions, please include relevant details in your message.
                   </p>
                 </div>
               </div>
