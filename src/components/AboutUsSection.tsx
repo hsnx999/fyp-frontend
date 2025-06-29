@@ -33,7 +33,7 @@ const AboutUsSection: React.FC = () => {
   return (
     <section 
       ref={sectionRef}
-      className={`relative py-20 bg-gradient-to-b from-gray-900 to-gray-800 overflow-hidden transition-all duration-1000 ease-out ${
+      className={`relative py-20 bg-gradient-to-b from-slate-900 to-blue-950 overflow-hidden transition-all duration-1000 ease-out ${
         sectionVisible ? 'opacity-100' : 'opacity-0'
       }`}
       style={{
