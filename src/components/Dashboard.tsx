@@ -48,6 +48,41 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error('Error getting user:', userError);
+          return;
+        }
+
+        // Get current user's patient IDs
+        const { data: userPatients, error: patientsError } = await supabase
+          .from('patients')
+          .select('id')
+          .eq('user_id', user.id);
+
+        if (patientsError) {
+          console.error('Error fetching user patients:', patientsError);
+          return;
+        }
+
+        const patientIds = userPatients?.map(p => p.id) || [];
+        
+        // If user has no patients, set empty data
+        if (patientIds.length === 0) {
+          setData({
+            patientCount: 0,
+            patientGrowth: 0,
+            notesToReview: 0,
+            monthlyReports: 0,
+            reportGrowth: 0,
+            averageConfidence: 0,
+            recentActivity: [],
+            patientTrends: []
+          });
+          return;
+        }
+
         const now = new Date();
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -56,12 +91,14 @@ const Dashboard = () => {
         // Fetch current month's patient count
         const { count: currentPatients } = await supabase
           .from('patients')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
 
         // Fetch last month's patient count
         const { count: lastMonthPatients } = await supabase
           .from('patients')
           .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
           .lte('created_at', lastDayOfLastMonth.toISOString())
           .gte('created_at', firstDayOfLastMonth.toISOString());
 
@@ -74,18 +111,21 @@ const Dashboard = () => {
         const { count: pendingNotes } = await supabase
           .from('notes')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending');
+          .eq('status', 'pending')
+          .in('patient_id', patientIds);
 
         // Fetch current month's reports
         const { count: currentReports } = await supabase
           .from('reports')
           .select('*', { count: 'exact', head: true })
-          .gte('created_at', firstDayOfMonth.toISOString());
+          .gte('created_at', firstDayOfMonth.toISOString())
+          .in('patient_id', patientIds);
 
         // Fetch last month's reports
         const { count: lastMonthReports } = await supabase
           .from('reports')
           .select('*', { count: 'exact', head: true })
+          .in('patient_id', patientIds)
           .lte('created_at', lastDayOfLastMonth.toISOString())
           .gte('created_at', firstDayOfLastMonth.toISOString());
 
@@ -98,7 +138,8 @@ const Dashboard = () => {
         const { data: confidenceData } = await supabase
           .from('reports')
           .select('confidence')
-          .gte('created_at', firstDayOfMonth.toISOString());
+          .gte('created_at', firstDayOfMonth.toISOString())
+          .in('patient_id', patientIds);
 
         const averageConfidence = confidenceData?.length
           ? Math.round(
@@ -117,6 +158,7 @@ const Dashboard = () => {
             notes (id, status, created_at),
             reports (id, created_at)
           `)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -129,7 +171,7 @@ const Dashboard = () => {
         })) || [];
 
         // Fetch trend data based on timeRange
-        const trendData = await fetchTrendData(timeRange);
+        const trendData = await fetchTrendData(timeRange, patientIds);
 
         setData({
           patientCount: currentPatients || 0,
@@ -175,7 +217,11 @@ const Dashboard = () => {
     };
   }, [timeRange]);
 
-  const fetchTrendData = async (range: string): Promise<TrendData[]> => {
+  const fetchTrendData = async (range: string, patientIds: string[]): Promise<TrendData[]> => {
+    if (patientIds.length === 0) {
+      return [];
+    }
+
     const now = new Date();
     let startDate: Date;
     let interval: string;
@@ -198,13 +244,79 @@ const Dashboard = () => {
         interval = 'day';
     }
 
-    const { data: trendData } = await supabase
-      .rpc('get_trend_data', {
-        start_date: startDate.toISOString(),
-        trend_interval: interval
-      });
+    // Since we need to filter by user's patients, we'll calculate trends manually
+    // Get patients data
+    const { data: patientsData } = await supabase
+      .from('patients')
+      .select('created_at')
+      .in('id', patientIds)
+      .gte('created_at', startDate.toISOString());
+
+    // Get reports data
+    const { data: reportsData } = await supabase
+      .from('reports')
+      .select('created_at')
+      .in('patient_id', patientIds)
+      .gte('created_at', startDate.toISOString());
+
+    // Group data by interval
+    const trendMap = new Map<string, { patients: number; reports: number }>();
+    
+    // Initialize all intervals with 0 counts
+    const current = new Date(startDate);
+    while (current <= new Date()) {
+      const key = formatDateForInterval(current, interval);
+      trendMap.set(key, { patients: 0, reports: 0 });
+      
+      // Increment by interval
+      if (interval === 'day') {
+        current.setDate(current.getDate() + 1);
+      } else if (interval === 'week') {
+        current.setDate(current.getDate() + 7);
+      } else if (interval === 'month') {
+        current.setMonth(current.getMonth() + 1);
+      }
+    }
+
+    // Count patients
+    patientsData?.forEach(patient => {
+      const key = formatDateForInterval(new Date(patient.created_at), interval);
+      const existing = trendMap.get(key);
+      if (existing) {
+        existing.patients += 1;
+      }
+    });
+
+    // Count reports
+    reportsData?.forEach(report => {
+      const key = formatDateForInterval(new Date(report.created_at), interval);
+      const existing = trendMap.get(key);
+      if (existing) {
+        existing.reports += 1;
+      }
+    });
+
+    // Convert to array format
+    const trendData = Array.from(trendMap.entries()).map(([date, counts]) => ({
+      date,
+      patients: counts.patients,
+      reports: counts.reports
+    }));
 
     return trendData || [];
+  };
+
+  const formatDateForInterval = (date: Date, interval: string): string => {
+    if (interval === 'day') {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else if (interval === 'week') {
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      return weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else if (interval === 'month') {
+      return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   if (loading) {
