@@ -30,15 +30,15 @@ const PatientSelectionModal: React.FC<PatientSelectionModalProps> = ({
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = 
-      patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (patient.name && patient.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       patient.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase());
+      (patient.emailAddress && patient.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesGender = !filters.gender || patient.gender === filters.gender;
     
     const matchesAge = !filters.ageRange || (() => {
       const age = patient.age;
-      if (!age) return false;
+      if (!age || age === null) return false;
       switch (filters.ageRange) {
         case '0-30': return age >= 0 && age <= 30;
         case '31-50': return age >= 31 && age <= 50;

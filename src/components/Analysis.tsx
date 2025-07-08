@@ -36,30 +36,47 @@ const Analysis = () => {
 
   useEffect(() => {
     const fetchPatientsFromDatabase = async () => {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*');
+      try {
+        // Get current user first
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.error('Error getting user:', userError);
+          setPatients([]);
+          return;
+        }
 
-      if (error) {
-        console.error("Error fetching patients:", error);
-        return [];
+        const { data, error } = await supabase
+          .from('patients')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error("Error fetching patients:", error);
+          setPatients([]);
+          return;
+        }
+
+        // Transform database patients to match our Patient interface
+        const transformedPatients = (data || []).map(dbPatient => ({
+          ...getDefaultPatient(),
+          id: dbPatient.id,
+          name: dbPatient.name,
+          age: dbPatient.age,
+          gender: dbPatient.gender,
+          dateOfBirth: dbPatient.date_of_birth || '',
+          phoneNumber: dbPatient.phone_number || '',
+          emailAddress: dbPatient.email_address || '',
+          address: dbPatient.address || '',
+          medicalHistorySummary: dbPatient.medical_history_summary || '',
+        }));
+
+        setPatients(transformedPatients);
+      } catch (err) {
+        console.error('Error in fetchPatientsFromDatabase:', err);
+        setPatients([]);
       }
-
-      // Transform database patients to match our Patient interface
-      const transformedPatients = data.map(dbPatient => ({
-        ...getDefaultPatient(),
-        id: dbPatient.id,
-        name: dbPatient.name,
-        age: dbPatient.age,
-        gender: dbPatient.gender,
-        dateOfBirth: dbPatient.date_of_birth || '',
-        phoneNumber: dbPatient.phone_number || '',
-        emailAddress: dbPatient.email_address || '',
-        address: dbPatient.address || '',
-        medicalHistorySummary: dbPatient.medical_history_summary || '',
-      }));
-
-      setPatients(transformedPatients);
     };
 
     fetchPatientsFromDatabase();
