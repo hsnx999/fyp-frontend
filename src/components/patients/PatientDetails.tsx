@@ -20,30 +20,45 @@ const PatientDetails: React.FC = () => {
       if (!id) return;
 
       try {
+        // Get current user first
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.error('Error getting user:', userError);
+          setPatient(null);
+          setLoading(false);
+          return;
+        }
+
         // Fetch patient details
         const { data: patientData, error: patientError } = await supabase
           .from('patients')
           .select('*')
           .eq('id', id)
+          .eq('user_id', user.id)
           .single();
 
         if (patientError) {
-          console.error('Error fetching patient:', patientError);
+          console.error('Error fetching patient or patient not found:', patientError);
           setPatient(null);
         } else {
           setPatient(patientData);
         }
 
-        // Fetch analysis history
+        // Fetch analysis history (only if patient belongs to current user)
         const { data: reportsData, error: reportsError } = await supabase
           .from('reports')
           .select('*')
           .eq('patient_id', id)
+          .in('patient_id', [id]) // This ensures we only get reports for this specific patient
           .order('created_at', { ascending: false })
           .limit(5);
 
-        if (!reportsError && reportsData) {
+        // Only set analysis history if we have a valid patient
+        if (!reportsError && reportsData && patientData) {
           setAnalysisHistory(reportsData);
+        } else {
+          setAnalysisHistory([]);
         }
       } catch (error) {
         console.error('Error fetching patient data:', error);

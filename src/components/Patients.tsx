@@ -31,9 +31,19 @@ const Patients = () => {
 
   const fetchPatients = async () => {
     try {
+      // Get current user first
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        setError('You must be logged in to view patients');
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('patients')
         .select('*')
+        .eq('user_id', user.id)
         .order('last_visit', { ascending: false });
 
       if (error) throw error;
